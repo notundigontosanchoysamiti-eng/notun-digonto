@@ -1,0 +1,11 @@
+<script id="ndUiReady">
+(function(){
+  var ok=!!(window.ND_APP_CORE_READY&&window.ND_MODULE_1_READY&&window.ND_MODULE_2_READY&&window.ND_MODULE_3_READY&&typeof window.ND_START_APP==='function');
+  window.ND_UI_READY=ok;
+  window.ND_MAIN_APP_READY=ok;
+  var detail='core='+(window.ND_APP_CORE_READY?'OK':'NO')+' · m1='+(window.ND_MODULE_1_READY?'OK':'NO')+' · m2='+(window.ND_MODULE_2_READY?'OK':'NO')+' · m3='+(window.ND_MODULE_3_READY?'OK':'NO');
+  if(window.ND_EARLY_ERRORS&&window.ND_EARLY_ERRORS.length){var e=window.ND_EARLY_ERRORS[window.ND_EARLY_ERRORS.length-1];detail+=' · '+e.message+(e.line?' @'+e.line+':'+e.col:'');}
+  if(typeof window.ND_AUTH_MARK_READY==='function')window.ND_AUTH_MARK_READY(ok,detail);
+  if(!ok){try{console.error('[ND UI READY]',detail,window.ND_EARLY_ERRORS);}catch(_e){}}
+})();
+</script>

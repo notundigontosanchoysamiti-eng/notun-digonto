@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <base target="_top">
+  <?!= include('Styles'); ?>
+  <?!= include('LogoData'); ?>
+</head>
+<body>
+  <section id="loginView">
+    <div class="login-brand">
+      <div class="brand-panel">
+        <img id="loginLogo" class="brand-logo" alt="Logo" src="">
+        <h1>নতুন দিগন্ত সঞ্চয় সমিতি</h1>
+        <h3>Notun Digonto Sanchoy Samity · ESTD 2026</h3>
+        <p>একসাথে সঞ্চয়, উন্নত আগামীর পথে</p>
+      </div>
+    </div>
+    <div class="login-side">
+      <div class="login-card" id="loginForm">
+        <h2>স্বাগতম</h2>
+        <div class="sub">আপনার ইউজারনেম ও পাসওয়ার্ড দিয়ে লগইন করুন</div>
+        <div class="field"><label>ইউজারনেম</label><input class="input" id="loginUsername" autocomplete="username" required></div>
+        <div class="field"><label>পাসওয়ার্ড</label><input class="input" id="loginPassword" type="password" autocomplete="current-password" required></div>
+        <button class="btn btn-primary btn-block" type="button" id="loginBtn" disabled>⏳ UI প্রস্তুত হচ্ছে...</button>
+        <div id="loginStatus" class="login-note" style="display:none;margin-top:10px"></div>
+        <div id="uiHealthStatus" class="login-note" style="margin-top:8px;color:#52627a">UI modules যাচাই হচ্ছে...</div>
+        <div class="login-note">প্রথমবার Setup করার পর Google Sheet-এর <b>CONFIG</b> শিটে Initial Admin username ও one-time password পাওয়া যাবে। প্রথম লগইনের পর পাসওয়ার্ড পরিবর্তন করুন।</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="appView" class="hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-brand">
+        <img id="sideLogo" class="side-logo" alt="Logo" src="">
+        <h2 id="sideName">নতুন দিগন্ত সঞ্চয়</h2>
+        <p id="sideNameEn">Notun Digonto Sanchoy</p>
+        <small>ESTD: <span id="sideEstd">2026</span></small>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-footer">© 2026 Notun Digonto Sanchoy<br>All Rights Reserved</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="top-title"><h1 id="topTitle">নতুন দিগন্ত সঞ্চয়</h1><p id="topTagline">একটি নির্ভরযোগ্য সঞ্চয় ও ঋণ ব্যবস্থাপনা সমাধান</p></div>
+        <div class="live-box"><div class="live-row"><span class="live-dot">● LIVE</span> &nbsp;<span id="clockText"></span></div><div class="live-date" id="dateText"></div></div>
+        <div class="lang-switch"><button id="langBnBtn" data-lang="bn" class="active">বাংলা</button><button id="langEnBtn" data-lang="en">English</button></div>
+        <button class="top-icon" id="notificationBtn">🔔<span class="badge hidden" id="notificationBadge">0</span></button>
+        <div class="user-box"><img id="userAvatar" class="avatar" alt="User" src=""><div><b id="userName">Admin</b><small id="userRole">প্রশাসক</small></div></div>
+        <button class="btn btn-light btn-sm" id="logoutBtn">লগ আউট</button>
+      </header>
+      <div class="content" id="content"></div>
+    </main>
+  </section>
+
+  <div id="modalRoot"></div>
+  <div class="toast-wrap" id="toastRoot"></div>
+  <div class="loading hidden" id="loading"><div class="spinner"></div></div>
+
+  <?!= include('AuthCore'); ?>
+  <?!= include('AppCore'); ?>
+  <?!= include('Module1'); ?>
+  <?!= include('Module2'); ?>
+  <?!= include('Module3'); ?>
+  <?!= include('UiReady'); ?>
+</body>
+</html>

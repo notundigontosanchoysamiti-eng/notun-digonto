@@ -1,0 +1,219 @@
+<script id="ndAppCore">
+'use strict';
+function ndStorageGet(key){try{return window.localStorage?window.localStorage.getItem(key)||'':''}catch(e){try{return window.sessionStorage?window.sessionStorage.getItem(key)||'':''}catch(e2){return ''}}}
+function ndStorageSet(key,value){try{if(window.localStorage){window.localStorage.setItem(key,value);return}}catch(e){}try{if(window.sessionStorage)window.sessionStorage.setItem(key,value)}catch(e2){}}
+function ndStorageRemove(key){try{if(window.localStorage)window.localStorage.removeItem(key)}catch(e){}try{if(window.sessionStorage)window.sessionStorage.removeItem(key)}catch(e2){}}
+const ND_APP_VERSION='1.1.6';
+const ND={token:ndStorageGet('nd_token'),session:null,config:null,accounts:[],dashboard:null,currentPage:'dashboard',membersCache:null,charts:[],loading:0,lang:ndStorageGet('nd_lang')||'bn',settingsDirty:false};
+
+var ND_CHART_PROMISE=null;
+function ndLoadChartJs(){
+  if(typeof window.Chart!=='undefined')return Promise.resolve(true);
+  if(ND_CHART_PROMISE)return ND_CHART_PROMISE;
+  ND_CHART_PROMISE=new Promise(function(resolve){
+    var done=false,sc=document.createElement('script'),tm;
+    function finish(ok){if(done)return;done=true;if(tm)clearTimeout(tm);resolve(!!ok);}
+    sc.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+    sc.async=true;sc.defer=true;
+    sc.onload=function(){finish(typeof window.Chart!=='undefined');};
+    sc.onerror=function(){finish(false);};
+    tm=setTimeout(function(){finish(false);},4500);
+    (document.head||document.documentElement).appendChild(sc);
+  });
+  return ND_CHART_PROMISE;
+}
+
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const ND_EN={
+'ড্যাশবোর্ড':'Dashboard','সমিতির বর্তমান অবস্থা ও সাম্প্রতিক কার্যক্রম':'Current society status and recent activity','সদস্য':'Member','জমা':'Deposit','ঋণ':'Loan','মোট সদস্য':'Total Members','মোট সঞ্চয়':'Total Savings','আজকের জমা':'Today’s Collection','মোট ঋণ':'Total Loans','ক্যাশ/ব্যাংক':'Cash / Bank','ঋণ বাকি':'Loan Outstanding','সকল সদস্যের নেট সঞ্চয়':'Net savings of all members','আজকের মোট incoming':'Total incoming today','সঞ্চয়, কিস্তি ও অন্যান্য নগদ গ্রহণ':'Savings, installments and other cash-in','বিতরণকৃত ঋণ':'Disbursed loans','বর্তমান উপলব্ধ ব্যালেন্স':'Current available balance','মাসিক সঞ্চয়ের সারাংশ':'Monthly Savings Summary','শেষ ১২ মাস':'Last 12 months','সঞ্চয়ের ধরন অনুযায়ী':'Savings by Type','সদস্য স্ট্যাটাস':'Member Status','সক্রিয় সদস্য':'Active Members','নিষ্ক্রিয় সদস্য':'Inactive Members','বকেয়া সদস্য':'Members in Arrears','দ্রুত অ্যাকশন':'Quick Actions','সদস্য যুক্ত':'Add Member','টাকা জমা':'Receive Deposit','অতিরিক্ত সঞ্চয়':'Extra Savings','ঋণ আবেদন':'Loan Application','কিস্তি আদায়':'Collect Installment','টাকা উত্তোলন':'Withdrawal','সাম্প্রতিক যোগদানকৃত সদস্য':'Recently Joined Members','সব সদস্য দেখুন':'View All Members','সাম্প্রতিক লেনদেন':'Recent Transactions','সব দেখুন':'View All','তারিখ':'Date','ট্রানজেকশন':'Transaction','ধরন':'Type','পরিমাণ':'Amount','সাম্প্রতিক ঋণ আবেদন':'Recent Loan Applications','স্ট্যাটাস':'Status','মোট আয়':'Total Income','মোট ব্যয়':'Total Expense','নিট আয়-ব্যয়':'Net Income / Expense','সিস্টেমে পোস্টেড আয়':'Posted income','সিস্টেমে পোস্টেড ব্যয়':'Posted expenses','আয় - ব্যয়':'Income - Expense',
+'সদস্য ব্যবস্থাপনা':'Member Management','সদস্য, KYC, ছবি, ইউনিট ও লগইন অ্যাকাউন্ট':'Members, KYC, photo, units and login accounts','নতুন সদস্য':'New Member','সব স্ট্যাটাস':'All Statuses','খুঁজুন':'Search','নাম':'Name','মোবাইল':'Mobile','যোগদান':'Joined','অ্যাকশন':'Action','প্রোফাইল':'Profile','কোনো সদস্য পাওয়া যায়নি।':'No members found.','সদস্য প্রোফাইল':'Member Profile','তথ্য সংশোধনের অনুরোধ':'Request Profile Update','মোট বকেয়া':'Total Due','মাসিক ইউনিট':'Monthly Units','মাসিক জমা':'Monthly Deposit','রিসিট':'Receipt','পিতার নাম':'Father’s Name','মাতার নাম':'Mother’s Name','জন্ম তারিখ':'Date of Birth','রক্তের গ্রুপ':'Blood Group','পেশা':'Profession','বর্তমান ঠিকানা':'Present Address','স্থায়ী ঠিকানা':'Permanent Address','জাতীয় পরিচয়পত্রের স্ক্যান কপি':'NID Scan Copy','দেখুন':'View','নমিনি':'Nominee','ডকুমেন্টস':'Documents','গুরুত্বপূর্ণ পরিবর্তন Admin Audit Log-এ সংরক্ষিত থাকে।':'Important changes are stored in the Admin Audit Log.',
+'সঞ্চয় ও কালেকশন':'Savings & Collection','মাসিক Due, Collection, Advance, Extra Savings এবং Supporting Slip':'Monthly dues, collection, advance, extra savings and supporting slips','মাসিক জমা গ্রহণ':'Receive Monthly Savings','অতিরিক্ত সঞ্চয় গ্রহণ':'Receive Extra Savings','সদস্য *':'Member *','নির্বাচন করুন':'Select','সঞ্চয়ের মাস *':'Savings Month *','পরিমাণ *':'Amount *','হিসাব':'Account','Reference / Bank Txn ID':'Reference / Bank Txn ID','ঐচ্ছিক':'Optional','Supporting Document / Bank Slip':'Supporting Document / Bank Slip','সদস্য ও মাস নির্বাচন করলে Unit, Due ও বকেয়া এখানে দেখা যাবে।':'Select member and month to see units, due and outstanding balance here.','বাতিল':'Cancel','জমা সফল হয়েছে: ':'Deposit successful: ','সাম্প্রতিক সঞ্চয় লেনদেন':'Recent Savings Transactions','মাস':'Month','বকেয়া':'Due','সঞ্চয় এন্ট্রি সম্পাদনা':'Edit Savings Entry','সংশোধনের কারণ *':'Correction Reason *','সঞ্চয় এন্ট্রি সংশোধন হয়েছে।':'Savings entry corrected.',
+'রিসিট ও ভাউচার':'Receipts & Vouchers','লোন ব্যবস্থাপনা':'Loan Management','বিনিয়োগ':'Investments','হিসাব ও ফাইন্যান্স':'Accounts & Finance','সভা ও কমিটি':'Meetings & Committee','রিপোর্টসমূহ':'Reports','নোটিফিকেশন':'Notifications','ব্যবহারকারী ও পারমিশন':'Users & Roles','অডিট ও সংশোধন':'Audit & Corrections','ব্যাকআপ ও ডাটাবেজ':'Backup & Database','সেটিংস':'Settings','লগ আউট':'Logout','আমার প্রোফাইল':'My Profile','আমার সঞ্চয়':'My Savings','আমার লেজার':'My Ledger','আমার ঋণ':'My Loans','আমার রিসিট':'My Receipts','আমার ডকুমেন্ট':'My Documents','নোটিশ':'Notices','পাসওয়ার্ড':'Password','আমার ড্যাশবোর্ড':'My Dashboard','নোটিশ ও আপডেট':'Notices & Updates','কোনো নতুন নোটিশ নেই।':'No new notices.','বিবরণ':'Description','ডেবিট':'Debit','ক্রেডিট':'Credit',
+'ব্যক্তিগত তথ্য':'Personal Information','নাম (বাংলা) *':'Name (Bangla) *','নাম (English)':'Name (English)','মোবাইল *':'Mobile *','জন্ম তারিখ':'Date of Birth','রক্তের গ্রুপ (ঐচ্ছিক)':'Blood Group (Optional)','পেশা':'Profession','পিতার নাম':'Father’s Name','মাতার নাম':'Mother’s Name','ইমেইল':'Email','সঞ্চয় ইউনিট':'Savings Units','ইউনিট পরিবর্তন':'Change Units','ছবি':'Photo','জাতীয় পরিচয়পত্রের স্ক্যান কপি (ঐচ্ছিক)':'NID Scan Copy (Optional)','বর্তমান NID Scan':'Current NID Scan','নতুন ফাইল নির্বাচন না করলে আগের স্ক্যান কপি অপরিবর্তিত থাকবে।':'If no new file is selected, the existing scan copy will remain unchanged.','JPG/PNG/PDF · সর্বোচ্চ 5 MB':'JPG/PNG/PDF · Max 5 MB','নমিনি তথ্য':'Nominee Information','নমিনির নাম':'Nominee Name','সম্পর্ক':'Relation','শতাংশ':'Percentage','নতুন সদস্য যোগ করুন':'Add New Member','সদস্য তথ্য সম্পাদনা':'Edit Member','সদস্য তথ্য আপডেট হয়েছে।':'Member information updated.','নতুন সদস্য তৈরি হয়েছে।':'New member created.'
+};
+function tr(v){const s=String(v??'');return ND.lang==='en'?(ND_EN[s]||s):s}
+const ND_BN={};Object.keys(ND_EN).forEach(function(bn){ND_BN[ND_EN[bn]]=bn;});
+function applyLanguageToNode(root){
+  if(!root)return;const map=ND.lang==='en'?ND_EN:ND_BN;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+  while((n=walker.nextNode())){const p=n.parentElement;if(!p||['SCRIPT','STYLE'].includes(p.tagName))continue;const raw=n.nodeValue,trim=raw.trim();if(trim&&map[trim])n.nodeValue=raw.replace(trim,map[trim]);}
+  root.querySelectorAll?.('[placeholder]').forEach(el=>{if(map[el.placeholder])el.placeholder=map[el.placeholder]});
+}
+function syncLanguageButtons(){
+  const bn=$('#langBnBtn'),en=$('#langEnBtn');if(bn)bn.classList.toggle('active',ND.lang==='bn');if(en)en.classList.toggle('active',ND.lang==='en');document.documentElement.lang=ND.lang;
+}
+async function setLanguage(lang){
+  ND.lang=lang==='en'?'en':'bn';ndStorageSet('nd_lang',ND.lang);syncLanguageButtons();if(ND.session){applyBrand();buildNav();applyLanguageToNode($('#content'));applyLanguageToNode($('#modalRoot'));setActiveNav(ND.currentPage||'dashboard');}updateClock();
+}
+
+const money=v=>(ND.config?.currency||'৳')+' '+Number(v||0).toLocaleString('en-BD',{maximumFractionDigits:2});
+const fmtDate=v=>{if(!v)return '-';try{return new Date(String(v).length===10?v+'T00:00:00':v).toLocaleDateString(ND.lang==='en'?'en-GB':'bn-BD',{year:'numeric',month:'short',day:'numeric'});}catch(e){return v}};
+const statusClass=s=>String(s||'').toLowerCase().replace(/\s+/g,'-');
+const statusBadge=s=>`<span class="status ${statusClass(s)}">${esc(s||'-')}</span>`;
+const initials=name=>String(name||'U').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
+function showLoading(v=true){ND.loading+=v?1:-1;ND.loading=Math.max(0,ND.loading);$('#loading').classList.toggle('hidden',ND.loading===0)}
+function toast(msg,type='success'){const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;$('#toastRoot').appendChild(el);setTimeout(()=>el.remove(),4200)}
+function ndDebounce(fn,wait=350){let timer;return function(...args){clearTimeout(timer);timer=setTimeout(()=>fn.apply(this,args),wait)}}
+function setButtonBusy(button,on,busyText='Saving...'){if(!button)return;if(on){button.dataset.originalText=button.textContent;button.disabled=true;button.textContent='⏳ '+busyText}else{button.disabled=false;button.textContent=button.dataset.originalText||button.textContent;delete button.dataset.originalText}}
+function gs(fn,...args){showLoading(true);return new Promise((resolve,reject)=>{if(typeof google==='undefined'||!google.script||!google.script.run){showLoading(false);reject(new Error('Google Apps Script runtime unavailable.'));return;}let runner=google.script.run.withSuccessHandler(r=>{showLoading(false);resolve(r)}).withFailureHandler(err=>{showLoading(false);const msg=err?.message||String(err);if(msg.includes('AUTH_REQUIRED')||msg.includes('AUTH_EXPIRED')){ndStorageRemove('nd_token');ND.token='';showLogin();toast('Session শেষ হয়েছে। আবার লগইন করুন।','error')}reject(new Error(msg))});runner[fn](...args);})}
+const ND_MUTATION_PATTERN=/^(create|update|save|collect|record|approve|reverse|cancel|withdraw|transfer|add|reset|change|upload|apply|disburse|correct|edit|mark|generate)/;const ND_INFLIGHT_MUTATIONS=new Map();
+function api(fn,...args){if(!ND_MUTATION_PATTERN.test(String(fn)))return gs(fn,ND.token,...args);let key;try{key=fn+'|'+JSON.stringify(args)}catch(e){key=fn}if(ND_INFLIGHT_MUTATIONS.has(key))return ND_INFLIGHT_MUTATIONS.get(key);const request=gs(fn,ND.token,...args).finally(()=>ND_INFLIGHT_MUTATIONS.delete(key));ND_INFLIGHT_MUTATIONS.set(key,request);return request}
+function setContent(html){$('#content').innerHTML=html;applyLanguageToNode($('#content'));window.scrollTo({top:0,behavior:'smooth'})}
+function hasPerm(p){return ND.session?.permissions?.includes('*')||ND.session?.permissions?.includes(p)}
+function isAdmin(){return ND.session?.role==='ADMIN'}
+function isMember(){return ND.session?.role==='MEMBER'}
+function closeModal(){$('#modalRoot').innerHTML=''}
+function modal(title,body,foot='',wide=false){$('#modalRoot').innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this) closeModal()"><div class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-label="${esc(tr(title))}"><div class="modal-head"><h3>${tr(title)}</h3><button class="modal-close" aria-label="Close" onclick="closeModal()">×</button></div><div class="modal-body">${body}</div>${foot?`<div class="modal-foot">${foot}</div>`:''}</div></div>`;applyLanguageToNode($('#modalRoot'));$$('#modalRoot input[name="mobile"],#modalRoot input[name="altMobile"],#modalRoot input[name="nomineeMobile"]').forEach(function(x){x.type='tel';x.inputMode='tel';x.autocomplete='tel'})}
+function printDocumentOnly(kind){
+  const root=$('#modalRoot'),paper=root?.querySelector('.receipt-paper');if(!paper){toast('Printable document পাওয়া যায়নি।','error');return}
+  document.body.classList.add('print-document-only');document.body.dataset.printKind=kind||'document';
+  const cleanup=()=>{document.body.classList.remove('print-document-only');delete document.body.dataset.printKind;window.removeEventListener('afterprint',cleanup)};
+  window.addEventListener('afterprint',cleanup,{once:true});setTimeout(()=>{try{window.print()}finally{setTimeout(cleanup,1200)}},50);
+}
+function fileToDataUrl(file){return new Promise((res,rej)=>{if(!file)return res('');const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+async function prepareMemberPhoto(file){
+  if(!file)return '';
+  if(!file.type||!file.type.startsWith('image/'))throw new Error('প্রোফাইল ছবির জন্য JPG/PNG/WebP image দিন।');
+  if(file.size>5*1024*1024)throw new Error('প্রোফাইল ছবির সর্বোচ্চ সাইজ 5 MB।');
+  const data=await fileToDataUrl(file);
+  try{
+    const dim=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve({w:im.naturalWidth,h:im.naturalHeight});im.onerror=reject;im.src=data});
+    if(dim.w<400||dim.h<400)toast('ছবিটি ছোট resolution-এর। ভালো ফলাফলের জন্য কমপক্ষে 600×600 px ছবি ব্যবহার করুন।','error');
+  }catch(e){}
+  return data; // Original bytes are retained; no browser-side compression.
+}
+async function openMemberPhoto(memberId){
+  try{
+    const data=await api('getMemberPhoto',memberId);
+    if(!data){toast('এই সদস্যের প্রোফাইল ছবি পাওয়া যায়নি।','error');return;}
+    modal('প্রোফাইল ছবি',`<div class="photo-viewer"><img src="${data}" alt="Member profile photo"></div><div class="photo-quality-note">মূল আপলোড করা ছবির quality ব্যবহার করা হচ্ছে। ছবিতে ক্লিক করে browser zoom-ও ব্যবহার করতে পারবেন।</div>`,`<button class="btn btn-light" onclick="closeModal()">বন্ধ</button>`,true);
+  }catch(e){toast(e.message,'error')}
+}
+function dateInputValue(v){return v?String(v).slice(0,10):''}
+async function supportingFilePayload(file){if(!file)return {dataUrl:'',fileName:''};if(file.size>4*1024*1024)throw new Error('Supporting document সর্বোচ্চ 4 MB হতে পারবে।');const ok=file.type.startsWith('image/')||file.type==='application/pdf';if(!ok)throw new Error('Bank slip হিসেবে JPG/PNG/PDF ফাইল দিন।');return {dataUrl:await fileToDataUrl(file),fileName:file.name||'bank_slip'}}
+async function memberDocumentPayload(file){if(!file)return {dataUrl:'',fileName:''};if(file.size>5*1024*1024)throw new Error('NID scan copy সর্বোচ্চ 5 MB হতে পারবে।');const ok=file.type.startsWith('image/')||file.type==='application/pdf';if(!ok)throw new Error('NID scan copy হিসেবে JPG/PNG/PDF ফাইল দিন।');return {dataUrl:await fileToDataUrl(file),fileName:file.name||'nid_scan'}}
+async function safeDocumentPayload(file){if(!file)return {dataUrl:'',fileName:''};if(file.size>5*1024*1024)throw new Error('ফাইল সর্বোচ্চ 5 MB হতে পারবে।');const ok=['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type);if(!ok)throw new Error('শুধু JPG, PNG, WebP বা PDF ফাইল দিন।');return {dataUrl:await fileToDataUrl(file),fileName:file.name||'document'}}
+function formObj(form){var out={};var fd=new FormData(form);fd.forEach(function(v,k){out[k]=v;});return out}
+function today(){return new Date().toISOString().slice(0,10)}
+function monthKey(){return today().slice(0,7)}
+function destroyCharts(){ND.charts.forEach(c=>{try{c.destroy()}catch(e){}});ND.charts=[]}
+
+function ndErrorText(err){return (err&&err.message)?err.message:String(err||'Unknown error')}
+function showAppError(err,context='APP_START'){
+  const msg=ndErrorText(err); console.error('[ND]',context,err);
+  try{showApp();setContent(`<div class="card"><div class="card-body"><div class="notice danger"><b>অ্যাপ লোড করতে সমস্যা হয়েছে</b><br>${esc(msg)}<div class="helper">Error: ${esc(context)} · Page refresh করে আবার চেষ্টা করুন। সমস্যা থাকলে Apps Script-এর Executions log দেখুন।</div></div><div class="section-gap"><button class="btn btn-primary" onclick="location.reload()">↻ Reload</button> <button class="btn btn-light" onclick="ndStorageRemove('nd_token');ND.token='';showLogin()">Login Screen</button></div></div></div>`)}catch(e){try{document.body.innerHTML='<pre style="padding:20px">'+msg+'</pre>'}catch(_){} }
+}
+window.addEventListener('error',function(e){if(e&&e.error)console.error('[ND global error]',e.error)});
+window.addEventListener('unhandledrejection',function(e){console.error('[ND unhandled rejection]',e.reason)});
+var ND_BOOTED=false;
+async function ndStartAppFromLogin(r){
+  try{
+    if(!r||!r.token||!r.session||!r.config)throw new Error('Login response অসম্পূর্ণ।');
+    ND.token=r.token;ND.session=r.session;ND.config=r.config;ND.accounts=r.accounts||[];ND.dashboard=null;ND.membersCache=null;
+    ndStorageSet('nd_token',ND.token);
+    ND.lang=ndStorageGet('nd_lang')||ND.config.language||'bn';syncLanguageButtons();
+    showApp();applyBrand();buildNav();
+    setContent('<div class="card"><div class="card-body"><div class="notice"><b>লগইন সফল হয়েছে। ড্যাশবোর্ড লোড হচ্ছে...</b></div></div></div>');
+    var ok=await renderPage('dashboard');
+    loadNotificationBadge();ndLoadChartJs();
+    if(ok&&r.mustChangePassword)setTimeout(function(){openPasswordModal(true)},250);
+    return true;
+  }catch(err){showAppError(err,'LOGIN_START');throw err;}
+}
+window.ND_START_APP=ndStartAppFromLogin;
+function ndBoot(){
+  if(ND_BOOTED)return;ND_BOOTED=true;
+  try{
+    document.querySelectorAll('#loginLogo,#sideLogo').forEach(function(x){if(!x.getAttribute('src'))x.src=ND_LOGO_DATA});
+    if($('#userAvatar')&&!$('#userAvatar').getAttribute('src'))$('#userAvatar').src=ND_LOGO_DATA;
+    bindBase();
+    if(ND.token){showApp();setContent('<div class="card"><div class="card-body"><div class="notice"><b>আগের Session যাচাই করা হচ্ছে...</b></div></div></div>');initApp().catch(function(err){ndStorageRemove('nd_token');ND.token='';ND.session=null;showLogin();var st=$('#loginStatus');if(st){st.style.display='block';st.style.color='#b42318';st.textContent='আগের Session পাওয়া যায়নি। আবার লগইন করুন।';}console.error(err);});}
+    else showLogin();
+  }catch(err){showAppError(err,'BOOT');}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ndBoot,{once:true});else setTimeout(ndBoot,0);
+window.addEventListener('load',ndBoot,{once:true});
+function bindBase(){
+  var lo=$('#logoutBtn');if(lo)lo.addEventListener('click',async function(){try{await api('logout')}catch(e){}ndStorageRemove('nd_token');ND.token='';ND.session=null;showLogin()});
+  var mt=$('#menuToggle');if(mt)mt.addEventListener('click',toggleSidebarMode);
+  var bn=$('#langBnBtn'),en=$('#langEnBtn');if(bn)bn.addEventListener('click',function(){setLanguage('bn')});if(en)en.addEventListener('click',function(){setLanguage('en')});syncLanguageButtons();
+  var nb=$('#notificationBtn');if(nb)nb.addEventListener('click',function(){renderPage('notifications')});
+  setInterval(updateClock,1000);updateClock();
+}
+window.addEventListener('beforeunload',function(e){if(!ND.settingsDirty)return;e.preventDefault();e.returnValue='';});
+const ndRunDebouncedSearch=ndDebounce(function(id){var button=id==='memberSearch'?$('#memberFilterBtn'):id==='receiptSearch'?$('#receiptSearchBtn'):id==='txSearch'?$('#filterTx'):null;if(button&&!button.disabled)button.click()},400);
+document.addEventListener('input',function(e){if(e.target&&['memberSearch','receiptSearch','txSearch'].includes(e.target.id))ndRunDebouncedSearch(e.target.id)});
+function showLogin(){destroyCharts();var av=$('#appView'),lv=$('#loginView');if(av)av.classList.add('hidden');if(lv)lv.classList.remove('hidden');var pw=$('#loginPassword');if(pw)pw.value='';var btn=$('#loginBtn');if(btn){btn.disabled=false;btn.textContent='🔐 লগইন';}}
+function showApp(){var lv=$('#loginView'),av=$('#appView');if(lv)lv.classList.add('hidden');if(av)av.classList.remove('hidden')}
+function applySidebarPreference(){const sb=$('#sidebar');if(!sb)return;if(innerWidth>=980){sb.classList.remove('open');sb.classList.toggle('collapsed',ndStorageGet('nd_sidebar_collapsed')==='1')}else sb.classList.remove('collapsed')}
+function toggleSidebarMode(){const sb=$('#sidebar');if(innerWidth<980){sb.classList.toggle('open');return;}sb.classList.toggle('collapsed');ndStorageSet('nd_sidebar_collapsed',sb.classList.contains('collapsed')?'1':'0')}
+window.addEventListener('resize',()=>applySidebarPreference());
+
+async function initApp(){
+  try{
+    const b=await api('apiBootstrap');
+    if(!b||!b.session||!b.config)throw new Error('Bootstrap response অসম্পূর্ণ।');
+    ND.session=b.session;ND.config=b.config;ND.accounts=b.accounts||[];ND.dashboard=b.dashboard||null;ND.membersCache=null;ND.lang=ndStorageGet('nd_lang')||ND.config.language||'bn';syncLanguageButtons();
+    applyBrand();buildNav();showApp();
+    await renderPage('dashboard');
+    loadNotificationBadge();
+    ndLoadChartJs();
+    return true;
+  }catch(err){
+    if(String(ndErrorText(err)).includes('AUTH_')){ndStorageRemove('nd_token');ND.token='';showLogin();throw err}
+    showAppError(err,'INIT_APP');throw err;
+  }
+}
+function applyBrand(){
+  applySidebarPreference();
+  const en=ND.lang==='en';$('#sideName').textContent=en?ND.config.nameEn:ND.config.nameBn;$('#sideNameEn').textContent=en?ND.config.nameBn:ND.config.nameEn;$('#sideEstd').textContent=ND.config.estd;$('#topTitle').textContent=en?ND.config.nameEn:ND.config.nameBn;$('#topTagline').textContent=en?'A reliable savings and loan management solution':(ND.config.tagline||'একটি নির্ভরযোগ্য সঞ্চয় ও ঋণ ব্যবস্থাপনা সমাধান');$('#userName').textContent=ND.session.fullName||ND.session.username;const rolesBn={ADMIN:'প্রশাসক',STAFF:'স্টাফ',ACCOUNTANT:'হিসাবরক্ষক',COLLECTOR:'কালেক্টর',SECRETARY:'সচিব',VIEWER:'ভিউয়ার',MEMBER:'সদস্য'},rolesEn={ADMIN:'Administrator',STAFF:'Staff',ACCOUNTANT:'Accountant',COLLECTOR:'Collector',SECRETARY:'Secretary',VIEWER:'Viewer',MEMBER:'Member'};$('#userRole').textContent=(en?rolesEn:rolesBn)[ND.session.role]||ND.session.role;syncLanguageButtons();
+}
+function updateClock(){const d=new Date();$('#clockText').textContent=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});$('#dateText').textContent=d.toLocaleDateString(ND.lang==='en'?'en-GB':'bn-BD',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+function buildNav(){const admin=[
+  ['dashboard','🏠','ড্যাশবোর্ড','Dashboard','dashboard.view'],['members','👥','সদস্য ব্যবস্থাপনা','Members','members.view'],['savings','💰','সঞ্চয় ও কালেকশন','Savings','savings.view'],['receipts','🧾','রিসিট ও ভাউচার','Receipts','receipts.view'],['loans','🏦','লোন ব্যবস্থাপনা','Loans','loans.view'],['investments','📈','বিনিয়োগ','Investments','investments.view'],['profits','🪙','মুনাফা ব্যবস্থাপনা','Profit Management','profits.view'],['finance','💼','হিসাব ও ফাইন্যান্স','Accounts & Finance','accounts.view'],['meetings','🤝','সভা ও কমিটি','Meetings & Committee','meetings.view'],['documents','📁','ডকুমেন্টস','Documents','documents.view'],['reports','📊','রিপোর্টসমূহ','Reports','reports.view'],['notifications','🔔','নোটিফিকেশন','Notifications','dashboard.view'],['users','👤','ব্যবহারকারী ও পারমিশন','Users & Roles','users.view'],['audit','🛡️','অডিট ও সংশোধন','Audit & Corrections','audit.view'],['backup','💾','ব্যাকআপ ও ডাটাবেজ','Backup & Database','backup.manage'],['settings','⚙️','সেটিংস','Settings','settings.edit']
+  ];
+  const member=[['dashboard','🏠','ড্যাশবোর্ড','Dashboard'],['profile','👤','আমার প্রোফাইল','My Profile'],['savings','💰','আমার সঞ্চয়','My Savings'],['ledger','📒','আমার লেজার','My Ledger'],['loans','🏦','আমার ঋণ','My Loans'],['receipts','🧾','আমার রিসিট','My Receipts'],['documents','📁','আমার ডকুমেন্ট','Documents'],['notifications','🔔','নোটিশ','Notices'],['password','🔐','পাসওয়ার্ড','Change Password']];
+  let items=isMember()?member:admin.filter(x=>x[0]==='users'?isAdmin():(x[0]==='settings'?isAdmin():(x[0]==='audit'||x[0]==='backup'?isAdmin()||hasPerm(x[4]):hasPerm(x[4]))));
+  $('#nav').innerHTML=items.map(x=>`<a class="nav-item" data-page="${x[0]}"><span class="nav-icon">${x[1]}</span><span class="nav-label"><b>${ND.lang==='en'?x[3]:x[2]}</b><small>${ND.lang==='en'?x[2]:x[3]}</small></span></a>`).join('')+`<a class="nav-item" id="sideLogout"><span class="nav-icon">↪</span><span class="nav-label"><b>${ND.lang==='en'?'Logout':'লগ আউট'}</b><small>${ND.lang==='en'?'লগ আউট':'Logout'}</small></span></a>`;
+  $$('#nav .nav-item[data-page]').forEach(a=>a.onclick=()=>renderPage(a.dataset.page));$('#sideLogout').onclick=()=>$('#logoutBtn').click();
+}
+function setActiveNav(page){$$('#nav .nav-item').forEach(a=>a.classList.toggle('active',a.dataset.page===page));if(innerWidth<980)$('#sidebar').classList.remove('open')}
+async function renderPage(page){
+  if(ND.currentPage==='settings'&&ND.settingsDirty&&page!=='settings'&&!window.confirm('সেটিংসে সংরক্ষণ না করা পরিবর্তন আছে। পেজ পরিবর্তন করলে সেগুলো হারাবে।'))return false;
+  if(page!=='settings')ND.settingsDirty=false;ND.currentPage=page;setActiveNav(page);destroyCharts();
+  try{
+    if(page==='dashboard')await renderDashboard();
+    else if(page==='members')await renderMembers();
+    else if(page==='profile')await renderMemberProfile(ND.session.memberId);
+    else if(page==='savings')await renderSavings();
+    else if(page==='ledger')await renderLedger(ND.session.memberId);
+    else if(page==='receipts')await renderReceipts();
+    else if(page==='loans')await renderLoans();
+    else if(page==='investments')await renderInvestments();
+    else if(page==='profits')await renderProfitManagement();
+    else if(page==='finance')await renderFinance();
+    else if(page==='meetings')await renderMeetings();
+    else if(page==='documents')await renderDocuments();
+    else if(page==='reports')await renderReports();
+    else if(page==='notifications')await renderNotifications();
+    else if(page==='users')await renderUsers();
+    else if(page==='audit')await renderAudit();
+    else if(page==='backup')await renderBackup();
+    else if(page==='settings')await renderSettings();
+    else if(page==='password')openPasswordModal(false);
+    else setContent(`<div class="empty">Page not found.</div>`);
+    return true;
+  }catch(e){
+    console.error('[ND renderPage]',page,e);toast(ndErrorText(e),'error');
+    setContent(`<div class="card"><div class="card-body"><div class="notice danger"><b>${esc(page)} page লোড হয়নি</b><br>${esc(ndErrorText(e))}</div><div class="section-gap"><button class="btn btn-primary" onclick="renderPage('${page}')">আবার চেষ্টা করুন</button></div></div></div>`);
+    return false;
+  }
+}
+async function ensureMembersCache(){if(ND.membersCache)return ND.membersCache;const rows=await api('listMembers',{limit:500});ND.membersCache=rows;return rows}
+async function memberName(id){const rows=await ensureMembersCache();return rows.find(x=>x.memberId===id)?.nameBn||id||'-'}
+async function loadNotificationBadge(){try{const n=await api('listNotifications');const c=n.filter(x=>x.STATUS==='UNREAD').length;$('#notificationBadge').textContent=c;$('#notificationBadge').classList.toggle('hidden',!c)}catch(e){}}
+
+function ndModuleHealth(){return {core:!!window.ND_APP_CORE_READY,module1:!!window.ND_MODULE_1_READY,module2:!!window.ND_MODULE_2_READY,module3:!!window.ND_MODULE_3_READY,build:window.ND_BUILD_ID||''};}
+window.ND_APP_CORE_READY=true;
+</script>

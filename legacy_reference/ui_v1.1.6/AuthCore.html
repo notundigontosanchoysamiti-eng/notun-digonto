@@ -1,0 +1,51 @@
+<script id="ndAuthCore">
+(function(){
+  'use strict';
+  window.ND_BUILD_ID='ND-1.1.6-CONFIG-MOBILE-DUE-PRINT';
+  window.ND_EARLY_ERRORS=window.ND_EARLY_ERRORS||[];
+  function record(kind,msg,line,col){
+    try{window.ND_EARLY_ERRORS.push({kind:kind,message:String(msg||''),line:line||0,col:col||0,time:new Date().toISOString()});}catch(_e){}
+  }
+  window.addEventListener('error',function(e){record('error',e&&e.message,e&&e.lineno,e&&e.colno);});
+  window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;record('promise',r&&r.message?r.message:String(r||''),0,0);});
+  var busy=false;
+  function byId(id){return document.getElementById(id);}
+  function setStatus(text,isError){var st=byId('loginStatus');if(!st)return;st.style.display=text?'block':'none';st.style.color=isError?'#b42318':'#52627a';st.textContent=text||'';}
+  function setHealth(text,isError){var st=byId('uiHealthStatus');if(!st)return;st.style.display=text?'block':'none';st.style.color=isError?'#b42318':'#52627a';st.textContent=text||'';}
+  function setBusy(on,text){busy=!!on;var btn=byId('loginBtn');if(btn){btn.disabled=busy||window.ND_UI_READY!==true;btn.textContent=busy?'⏳ লগইন হচ্ছে...':(window.ND_UI_READY===true?'🔐 লগইন':'⏳ UI প্রস্তুত হচ্ছে...');}if(text!==undefined)setStatus(text,false);}
+  function errText(err){return err&&err.message?err.message:String(err||'অজানা সমস্যা');}
+  function health(){
+    var parts=['core='+(window.ND_APP_CORE_READY?'OK':'NO'),'m1='+(window.ND_MODULE_1_READY?'OK':'NO'),'m2='+(window.ND_MODULE_2_READY?'OK':'NO'),'m3='+(window.ND_MODULE_3_READY?'OK':'NO')];
+    if(window.ND_EARLY_ERRORS&&window.ND_EARLY_ERRORS.length){var e=window.ND_EARLY_ERRORS[window.ND_EARLY_ERRORS.length-1];parts.push('error='+e.message+(e.line?' @'+e.line+':'+e.col:''));}
+    return parts.join(' · ');
+  }
+  function fail(err){setBusy(false);setStatus(errText(err),true);try{console.error('[ND AUTH]',err);}catch(_e){}}
+  function deliver(result){
+    if(!result||!result.token||!result.session||!result.config){fail(new Error('Login response অসম্পূর্ণ। আবার চেষ্টা করুন।'));return;}
+    if(window.ND_UI_READY!==true||typeof window.ND_START_APP!=='function'){fail(new Error('App UI প্রস্তুত নয়। '+health()));return;}
+    setStatus('লগইন সফল। ড্যাশবোর্ড খুলছে...',false);
+    try{var p=window.ND_START_APP(result);if(p&&typeof p.catch==='function')p.catch(fail);}catch(e){fail(e);}
+  }
+  function submit(){
+    if(busy)return false;
+    if(window.ND_UI_READY!==true||typeof window.ND_START_APP!=='function'){
+      setStatus('UI সম্পূর্ণ লোড হয়নি। Login server-এ পাঠানো হয়নি। '+health(),true);return false;
+    }
+    var u=byId('loginUsername'),p=byId('loginPassword');
+    var username=u?String(u.value||'').trim():'';var password=p?String(p.value||''):'';
+    if(!username||!password){setStatus('ইউজারনেম ও পাসওয়ার্ড দিন।',true);return false;}
+    if(typeof google==='undefined'||!google.script||!google.script.run){setStatus('Google Apps Script runtime পাওয়া যাচ্ছে না। Published /exec Web App URL ব্যবহার করুন।',true);return false;}
+    setBusy(true,'লগইন যাচাই করা হচ্ছে...');
+    try{google.script.run.withSuccessHandler(function(r){setBusy(false);deliver(r);}).withFailureHandler(fail).loginAndBootstrap(username,password);}catch(e){fail(e);}
+    return false;
+  }
+  function bind(){
+    var btn=byId('loginBtn'),u=byId('loginUsername'),p=byId('loginPassword');if(btn)btn.onclick=submit;
+    function key(e){var k=e&&(e.key||e.keyCode);if(k==='Enter'||k===13){if(e.preventDefault)e.preventDefault();submit();return false;}}
+    if(u)u.onkeydown=key;if(p)p.onkeydown=key;
+  }
+  window.ND_AUTH_MARK_READY=function(ok,detail){window.ND_UI_READY=!!ok;var btn=byId('loginBtn');if(btn){btn.disabled=!ok;btn.textContent=ok?'🔐 লগইন':'⚠ UI Load Error';}setHealth(ok?'UI Ready · v1.1.6':('UI Load Error · '+(detail||health())),!ok);};
+  window.ND_AUTH_SUBMIT=submit;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+})();
+</script>

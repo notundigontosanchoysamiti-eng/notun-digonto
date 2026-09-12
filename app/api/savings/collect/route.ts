@@ -1,0 +1,2 @@
+import {NextRequest} from 'next/server';import {authContext,requirePermission} from '@/lib/auth';import {serviceSupabase} from '@/lib/supabase';import {fail,ok} from '@/lib/http';
+export async function POST(req:NextRequest){try{const c=await authContext(req);requirePermission(c,'savings.collect');const p=await req.json();const {data,error}=await serviceSupabase().rpc('nd_collect_savings',{p_user_id:c.userId,p_payload:p});if(error)throw error;return ok(data)}catch(e){return fail(e)}}

@@ -1,0 +1,2 @@
+import {NextRequest} from 'next/server';import {authContext,requirePermission} from '@/lib/auth';import {serviceSupabase} from '@/lib/supabase';import {fail,ok} from '@/lib/http';
+export async function GET(req:NextRequest){try{const c=await authContext(req);requirePermission(c,'loans.view');const sb=serviceSupabase();const {data,error}=await sb.from('loans').select('*,members(name_bn,name_en,mobile)').order('created_at',{ascending:false}).limit(100);if(error)throw error;return ok({ok:true,items:data||[]})}catch(e){return fail(e)}}

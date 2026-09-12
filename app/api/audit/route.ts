@@ -1,0 +1,2 @@
+import {NextRequest} from 'next/server';import {authContext,requirePermission} from '@/lib/auth';import {serviceSupabase} from '@/lib/supabase';import {fail,ok} from '@/lib/http';
+export async function GET(req:NextRequest){try{const c=await authContext(req);requirePermission(c,'audit.view');const {data,error}=await serviceSupabase().from('audit_log').select('*').order('created_at',{ascending:false}).limit(150);if(error)throw error;return ok({ok:true,items:data||[]})}catch(e){return fail(e)}}

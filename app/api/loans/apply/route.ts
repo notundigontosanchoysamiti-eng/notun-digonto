@@ -1,0 +1,2 @@
+import {NextRequest} from 'next/server';import {authContext,requirePermission} from '@/lib/auth';import {serviceSupabase} from '@/lib/supabase';import {fail,ok} from '@/lib/http';
+export async function POST(req:NextRequest){try{const c=await authContext(req);requirePermission(c,'loans.create');const {memberId,...payload}=await req.json();const {data,error}=await serviceSupabase().rpc('nd_apply_loan',{p_user_id:c.userId,p_member_id:memberId,p_payload:payload});if(error)throw error;return ok(data,201)}catch(e){return fail(e)}}
