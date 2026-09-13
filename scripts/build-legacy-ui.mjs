@@ -40,6 +40,11 @@ html=html.replace(include,(_,name)=>{
   if(name==='AuthCore')content=bridge+'\n'+content;
   return content;
 });
+// Apps Script added this metadata in doGet; static Next.js delivery must add it here.
+html=html.replace('<head>', '<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
+const mobileDir=path.join(root,'legacy_mobile');
+html=html.replace('</head>', `<style id="ndMobileStyles">\n${fs.readFileSync(path.join(mobileDir,'responsive.css'),'utf8')}\n</style>\n</head>`);
+html=html.replace('</body>', `<script id="ndMobileBehavior">\n${fs.readFileSync(path.join(mobileDir,'responsive.js'),'utf8')}\n</script>\n</body>`);
 fs.mkdirSync(outDir,{recursive:true});
 fs.writeFileSync(path.join(outDir,'index.html'),html);
 console.log('Built public/legacy/index.html directly from original v1.1.6 UI includes + Next.js bridge.');

@@ -1,0 +1,104 @@
+/* Screen-only additions: original v1.1.6 source and desktop/print styles stay intact. */
+#ndDrawerBackdrop, #ndDrawerClose { display:none; }
+@media screen and (max-width:980px) {
+  html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  body { font-size:14px; }
+  #loginView, #appView { min-height:100vh; min-height:100dvh; }
+  .login-side { padding:24px max(20px,env(safe-area-inset-right)) 24px max(20px,env(safe-area-inset-left)); min-width:0; }
+  .main { margin-left:0; width:100%; min-width:0; }
+  .content { padding:12px max(12px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
+  .sidebar { width:min(300px,calc(100% - 56px)); max-height:100vh; max-height:100dvh; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); visibility:hidden; }
+  .sidebar.open { visibility:visible; }
+  .sidebar .side-brand { padding-top:12px; padding-right:44px; padding-left:44px; flex-shrink:0; }
+  .sidebar .side-logo { width:60px; height:60px; }
+  .sidebar .nav { min-height:0; overscroll-behavior-y:contain; }
+  .sidebar .side-footer { flex-shrink:0; }
+  #ndDrawerClose { display:block; position:absolute; right:6px; top:max(6px,env(safe-area-inset-top)); width:44px; height:44px; border:0; border-radius:8px; background:transparent; color:white; font-size:28px; }
+  #ndDrawerBackdrop:not([hidden]) { display:block; position:fixed; inset:0; z-index:29; background:rgba(5,20,40,.48); border:0; padding:0; }
+  body.nd-mobile-locked { position:fixed; top:var(--nd-scroll-y); width:100%; overflow:hidden; }
+  .topbar { height:auto; min-height:68px; display:flex; flex-wrap:wrap; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left)); }
+  .menu-toggle { flex:0 0 44px; min-height:44px; }
+  .top-title { flex:1 1 calc(100% - 60px); min-width:0; }
+  .top-title h1 { font-size:18px; line-height:1.35; overflow-wrap:anywhere; }
+  .top-title p { display:block; font-size:12px; line-height:1.4; }
+  .live-box { display:block; flex:1 1 170px; min-width:0; padding:6px 8px; }
+  .lang-switch { display:flex; flex:0 0 auto; }
+  .lang-switch button { min-width:44px; min-height:44px; font-size:13px; }
+  .top-icon { flex:0 0 44px; width:44px; height:44px; }
+  .user-box { min-width:0; flex:1 1 110px; }
+  .user-box>div { display:block; min-width:0; overflow-wrap:anywhere; }
+  .avatar { flex-shrink:0; }
+  #logoutBtn { flex:0 1 auto; }
+  .grid, .kpi-grid, .member-dashboard .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .grid-2, .grid-3 { grid-template-columns:minmax(0,1fr); }
+  .grid>*, .kpi-grid>*, .form-grid>*, .info-grid>*, .profile-head>*, .profile-stats>*, .quick-grid>*, .member-status>* { min-width:0; }
+  .kpi { padding:12px; gap:8px; flex-wrap:wrap; }
+  .kpi>div:last-child { min-width:0; flex:1 1 100px; }
+  .kpi-icon { flex-shrink:0; }
+  .kpi-value { font-size:20px; overflow-wrap:anywhere; }
+  .kpi-label, .kpi-sub, .mini-stat, .info-item, .notice, .helper, .file-pill, .profile-name { overflow-wrap:anywhere; }
+  .card-head { flex-wrap:wrap; }
+  .card-head>*, .page-head>* { min-width:0; }
+  .card-body { padding:12px; }
+  .chart-box { min-width:0; max-width:100%; }
+  .table-wrap { max-width:100%; min-width:0; overscroll-behavior-x:contain; }
+  .table { min-width:720px; }
+  .table .actions { width:auto; min-width:160px; }
+  .table .actions .btn { flex:0 0 auto; }
+  .table td .btn { margin:2px; }
+  .toolbar, .actions, .modal-foot, .receipt-attachment { flex-wrap:wrap; }
+  .toolbar>* { max-width:100%; }
+  .search { min-width:0; flex-basis:200px; }
+  .btn, .quick-btn, .tab, .nav-item { min-height:44px; }
+  .btn, .quick-btn { white-space:normal; overflow-wrap:anywhere; }
+  .input, .select, .textarea { min-width:0; max-width:100%; font-size:16px; min-height:44px; }
+  input[type="file"] { width:100%; min-width:0; max-width:100%; }
+  input[type="checkbox"], input[type="radio"] { flex-shrink:0; min-width:20px; min-height:20px; }
+  .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .form-grid.three { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .tabs { max-width:100%; }
+  .tab { flex-shrink:0; }
+  .modal-backdrop { padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); }
+  .modal, .modal.wide { min-width:0; max-width:100%; max-height:calc(100vh - 16px); max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overscroll-behavior-y:contain; }
+  .modal-head { gap:8px; }
+  .modal-head h3 { min-width:0; overflow-wrap:anywhere; }
+  .modal-close { width:44px; height:44px; flex-shrink:0; }
+  .modal-body { padding:12px; overflow-wrap:anywhere; }
+  .modal-foot { padding:12px; }
+  .modal-foot .btn { flex:1 1 130px; }
+  .photo-viewer { min-height:0; }
+  .photo-viewer img { max-height:65dvh; }
+  .toast-wrap { left:max(12px,env(safe-area-inset-left)); right:max(12px,env(safe-area-inset-right)); bottom:max(12px,env(safe-area-inset-bottom)); align-items:flex-end; }
+  .toast { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+  .receipt-modern-head { padding:16px; }
+  .receipt-brand { min-width:0; overflow-wrap:anywhere; }
+  .receipt-row { gap:12px; flex-wrap:wrap; }
+  .receipt-row>* { min-width:0; overflow-wrap:anywhere; }
+  .receipt-sign { gap:24px; }
+  .settings-sticky-actions { position:static; }
+}
+@media screen and (max-width:620px) {
+  .content { padding-left:max(9px,env(safe-area-inset-left)); padding-right:max(9px,env(safe-area-inset-right)); }
+  .topbar { position:relative; }
+  .top-title h1 { font-size:16px; }
+  .form-grid, .form-grid.three, .info-grid { grid-template-columns:minmax(0,1fr); }
+  .kpi { padding:10px; }
+  .kpi>div:last-child { flex-basis:100%; }
+  .kpi-value { font-size:16px; }
+  .kpi-icon { width:36px; height:36px; font-size:18px; }
+  .actions .btn { flex:1 1 130px; }
+  #content .toolbar>.search { min-width:0; flex:1 1 100%; }
+  .filter-sm { width:100%; min-width:0; }
+  .receipt-brand h2 { font-size:18px; }
+  .receipt-modern-head { gap:10px; }
+  .receipt-modern-head img { width:56px; height:56px; }
+  .receipt-amount { font-size:23px; overflow-wrap:anywhere; }
+}
+@media screen and (max-width:360px) {
+  .kpi-grid, .member-dashboard .kpi-grid { grid-template-columns:minmax(0,1fr); }
+}
+@media screen and (max-width:980px) and (max-height:500px) {
+  .topbar { position:relative; }
+  .sidebar .side-brand .side-logo { width:36px; height:36px; }
+  .sidebar .side-brand { padding-top:4px; padding-bottom:4px; }
+}
