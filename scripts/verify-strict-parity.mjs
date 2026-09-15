@@ -57,7 +57,7 @@ for(const fn of advancedBackend){if(!og.has(fn))errors.push(`Advanced original b
 const schema=read('supabase/migrations/001_schema.sql');
 const tables=[...schema.matchAll(/create table if not exists public\.(\w+)/g)].map(m=>m[1]);
 if(tables.length!==39)errors.push(`Expected 39 legacy data tables, found ${tables.length}`);
-for(const n of ['003_core_rules.sql','004_financial_rules.sql','005_investment_profit_rules.sql','006_parity_finance_rules.sql','008_parity_performance_permissions.sql']){
+for(const n of ['003_core_rules.sql','004_financial_rules.sql','005_investment_profit_rules.sql','006_parity_finance_rules.sql','008_parity_performance_permissions.sql','009_functional_parity_fixes.sql']){
   if(!fs.existsSync(path.join(root,'supabase/migrations',n)))errors.push(`Missing rule migration: ${n}`);
 }
 if(errors.length){console.error('\nSTRICT PARITY CHECK FAILED\n- '+errors.join('\n- '));process.exit(1)}

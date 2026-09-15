@@ -1,9 +1,9 @@
 {
   "name": "notun-digonto-modern",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev --turbopack",
@@ -13,7 +13,8 @@
     "create-admin": "node scripts/create-admin.mjs",
     "validate": "node scripts/validate-project.mjs",
     "verify-parity": "node scripts/verify-strict-parity.mjs",
-    "build:legacy-ui": "node scripts/build-legacy-ui.mjs"
+    "build:legacy-ui": "node scripts/build-legacy-ui.mjs",
+    "audit:functions": "node scripts/audit-functional-parity.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",

@@ -282,7 +282,7 @@ create table if not exists public.investments (
   expected_end_date date,
   status text,
   location text,
-  land_size numeric(18,2) not null default 0,
+  land_size text not null default '',
   mouza text,
   dag text,
   khatian text,
