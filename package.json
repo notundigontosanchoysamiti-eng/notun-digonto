@@ -14,7 +14,9 @@
     "validate": "node scripts/validate-project.mjs",
     "verify-parity": "node scripts/verify-strict-parity.mjs",
     "build:legacy-ui": "node scripts/build-legacy-ui.mjs",
-    "audit:functions": "node scripts/audit-functional-parity.mjs"
+    "audit:functions": "node scripts/audit-functional-parity.mjs",
+    "audit:navigation": "node scripts/audit-navigation-safety.mjs",
+    "test:navigation": "node scripts/test-navigation-bridge.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",
